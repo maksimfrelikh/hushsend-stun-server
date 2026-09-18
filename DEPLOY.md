@@ -5,6 +5,25 @@ starts, answers STUN, refuses relay allocations, and writes no log. Re-check it 
 § 4 rather than taking that on faith — the point of this file is a server you can verify, not one you
 are told about.
 
+## Status: not yet deployed anywhere (checked 2026-09-18)
+
+This repo is ready to deploy but **is not running as a service anywhere**. hushsend's clients still
+point at `stun:turn.hushsend.frelikh.dev:3478` — the coturn on the APP host, which also serves TURN.
+So the separation this repo exists for does not exist operationally yet; the repo split happened,
+the machine did not. Scheduled for after the product launches.
+
+What was verified on 2026-09-18, by starting this exact config on a spare port rather than reading
+it: it comes up, answers STUN, and `verify.sh` (which uses coturn's own `turnutils_uclient`, not a
+hand-rolled probe) confirms the relay allocation is refused. So "copy the repo to a machine and run
+it" works — after the three edits in § 2, which are NOT optional:
+
+  1. `realm=<YOUR.STUN.HOSTNAME>` is a placeholder and must be replaced.
+  2. `external-ip=` must be uncommented if the host is behind NAT.
+  3. `tls-listening-port` does nothing without a certificate — see the note in the config.
+
+There is no systemd unit in this repo on purpose: the distro's `coturn.service` reads
+`/etc/turnserver.conf`, which is what § 2 installs.
+
 ## Two gotchas that cost an afternoon — read these first
 
 **`-n` means "ignore the configuration file".** Not "no daemon". Every `turnserver -c yours.conf -n`
