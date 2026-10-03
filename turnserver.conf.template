@@ -1,0 +1,94 @@
+# ============================================================================
+# hushsend-stun-server — coturn configuration: STUN ONLY, no relay, no logging
+# ============================================================================
+# TEMPLATE. install.sh renders it into /etc/hushsend-stun/turnserver.conf, the
+# file the hushsend-stun.service unit reads. Values written as @…@ come from
+# the host's /etc/hushsend-stun/stun.env. Do not edit the rendered file: change
+# this template (or stun.env) and run the installer again.
+#
+# Every choice below is deliberate; the comments say why, because the value of
+# this host is entirely in what it REFUSES to do.
+#
+# Checked in CI against coturn 4.6.1 (check.sh: it starts, answers STUN, refuses
+# a relay allocation, writes no log) and by install.sh on every host after it
+# restarts the service. Re-check from outside with verify.sh.
+# ----------------------------------------------------------------------------
+
+# --- Listening ---------------------------------------------------------------
+# Bind everywhere; on a cloud VM behind 1:1 NAT you MUST also set external-ip,
+# or the server reports the private address back to clients and every reflexive
+# candidate it hands out is useless.
+listening-ip=0.0.0.0
+listening-port=@LISTEN_PORT@
+# PUBLIC or PUBLIC/PRIVATE. The installer comments this line out when
+# EXTERNAL_IP is empty (a host with its public address on an interface).
+external-ip=@EXTERNAL_IP@
+
+# Set EXPLICITLY even though we serve no TLS: unset, coturn's TLS listener does
+# not follow listening-port, and on a box where a second coturn already holds
+# the default port the whole server fails with "Cannot bind TLS/TCP listener
+# socket". Measured, not guessed. Without cert-file / pkey-file nothing actually
+# listens here (verified 2026-09-18) — do not advertise a `stuns:` URL until a
+# certificate is configured AND `ss -ltn` shows the port.
+tls-listening-port=@TLS_LISTEN_PORT@
+
+# --- RELAY: OFF — `stun-only` ------------------------------------------------
+# `stun-only` makes coturn answer STUN binding requests and nothing else: no
+# TURN allocation is ever made, whatever a client presents.
+#
+# ⚠️ CORRECTED 2026-10-03. This file used to say coturn has no STUN-only switch
+# and relied instead on configuring NO authentication, on the theory that an
+# unauthenticated server must refuse every allocation. MEASURED, that is false:
+# with no auth configured coturn switches to anonymous credentials and HANDS
+# OUT RELAYS to anyone (coturn 4.18: "allocate response received: success",
+# "Received relay addr" for a client with made-up credentials). The old check
+# that called it "refused" (verify.sh) could not fail — it read the client's
+# own argument error as a refusal. So: no authentication is still configured
+# here (there is nothing to steal), and `stun-only` is what refuses the relay.
+# install.sh and check.sh prove it on the RUNNING server with a real
+# allocation attempt that must come back "Cannot complete Allocation".
+stun-only
+#
+# ⚠️ Do NOT add `no-udp-relay` and `no-tcp-relay` together: coturn rejects that
+# pair outright ("CONFIG ERROR: --no-udp-relay and --no-tcp-relay options cannot
+# be used together") and then DISCARDS THIS ENTIRE FILE, falling back to its
+# defaults — which relay, and log. check.sh catches a discarded file by the port
+# coturn binds.
+#
+# A relay would put this operator on the media path, which is the position the
+# separation of STUN from signaling exists to keep everyone out of.
+
+# --- Defence in depth ---------------------------------------------------------
+# If relaying were ever enabled, these stop it being used as a reflector into
+# private address space. They cost nothing today.
+denied-peer-ip=0.0.0.0-0.255.255.255
+denied-peer-ip=10.0.0.0-10.255.255.255
+denied-peer-ip=127.0.0.0-127.255.255.255
+denied-peer-ip=169.254.0.0-169.254.255.255
+denied-peer-ip=172.16.0.0-172.31.255.255
+denied-peer-ip=192.168.0.0-192.168.255.255
+denied-peer-ip=::1
+denied-peer-ip=fc00::-fdff:ffff:ffff:ffff:ffff:ffff:ffff:ffff
+denied-peer-ip=fe80::-febf:ffff:ffff:ffff:ffff:ffff:ffff:ffff
+
+# --- Logging: OFF. The addresses are the sensitive part. ---------------------
+# This server necessarily SEES the IP and port of everyone who asks. It must not
+# REMEMBER them: a STUN log is a record of who used a privacy tool and when,
+# which is the metadata this product's users are most exposed by.
+no-stdout-log
+log-file=/dev/null
+simple-log
+
+# --- If `stun-only` were ever lost --------------------------------------------
+# Then these bound what an open relay could do. Note that 0 means UNLIMITED for
+# both quotas — the values here used to be 0 under a "DoS hygiene" heading,
+# which granted the opposite of what the heading said.
+max-bps=64000
+user-quota=1
+total-quota=1
+
+# --- Identity -----------------------------------------------------------------
+# Cosmetic for STUN-only operation, but coturn wants a realm.
+realm=@REALM@
+# Do not advertise the version to the internet.
+no-software-attribute
