@@ -1,0 +1,23 @@
+# hushsend-stun.service — installed by install.sh as /etc/systemd/system/hushsend-stun.service.
+#
+# Its own unit and its own config path (/etc/hushsend-stun/turnserver.conf), NOT the distro's
+# coturn.service and /etc/turnserver.conf: that way it runs unchanged on a dedicated host AND next to
+# a TURN relay that already owns coturn.service (laptop-server does exactly that). The settings follow
+# the distro unit, plus NoNewPrivileges.
+[Unit]
+Description=hushsend STUN server (coturn: STUN only, no relay, no logs)
+Documentation=https://github.com/maksimfrelikh/hushsend-stun-server
+After=network.target
+
+[Service]
+User=turnserver
+Group=turnserver
+Type=notify
+ExecStart=/usr/bin/turnserver -c /etc/hushsend-stun/turnserver.conf --pidfile=
+Restart=on-failure
+NoNewPrivileges=true
+InaccessibleDirectories=/home
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

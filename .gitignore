@@ -1,2 +1,4 @@
 node_modules/
 *.log
+stun.env
+.DS_Store
