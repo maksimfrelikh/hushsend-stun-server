@@ -2,13 +2,13 @@
 
 ## 0. Status (2026-10-10)
 
-**Installed on laptop-server, not reachable from outside yet.** `hushsend-stun.service` runs there
+**Installed on laptop-server, not yet verified from outside.** `hushsend-stun.service` runs there
 since 2026-10-10 19:47 UTC on 3479 (§ 6 step 4: STUN answers, an anonymous relay is refused, no log
-file), and ufw allows 3479/udp. Checked from the host the same day: the LAN address answers on 3479
-and the public address answers on the TURN relay's 3478, but not on 3479 — the router forward (§ 6
-step 2) is not in place yet. `verify.sh` from another network has not run, and hushsend's clients
-still get STUN from the TURN relay's coturn (`stun:turn.hushsend.frelikh.dev:3478`, run by the
-signaling operator — the live bundle names it).
+file); ufw allows 3479/udp and the router forwards it. Checked from the host the same day, through
+the router: `stun.hushsend.frelikh.dev:3479` answers and refuses an anonymous Allocate. That path is
+the router hairpinning, not the internet — `verify.sh` from another network has not run yet, and
+hushsend's clients still get STUN from the TURN relay's coturn (`stun:turn.hushsend.frelikh.dev:3478`,
+run by the signaling operator — the live bundle names it).
 
 **Corrected 2026-10-03.** This file used to say the config "has been loaded by a real coturn 4.6.1
 and checked end to end … refuses relay allocations". The refusal was never real: the config relied on
