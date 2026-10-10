@@ -2,13 +2,15 @@
 
 ## 0. Status (2026-10-10)
 
-**Installed on laptop-server, not yet verified from outside.** `hushsend-stun.service` runs there
-since 2026-10-10 19:47 UTC on 3479 (§ 6 step 4: STUN answers, an anonymous relay is refused, no log
-file); ufw allows 3479/udp and the router forwards it. Checked from the host the same day, through
-the router: `stun.hushsend.frelikh.dev:3479` answers and refuses an anonymous Allocate. That path is
-the router hairpinning, not the internet — `verify.sh` from another network has not run yet, and
-hushsend's clients still get STUN from the TURN relay's coturn (`stun:turn.hushsend.frelikh.dev:3478`,
-run by the signaling operator — the live bundle names it).
+**Running on laptop-server, and hushsend's clients use it.** `hushsend-stun.service` runs there since
+2026-10-10 19:47 UTC on 3479 (§ 6 step 4: STUN answers, an anonymous relay is refused, no log file);
+ufw allows 3479/udp and the router forwards it. `verify.sh` passed from a mobile network the same
+evening: a public mapped address, the anonymous Allocate refused. hushsend switched with `bf15fd6`
+(`VITE_STUN_URLS=stun:stun.hushsend.frelikh.dev:3479`), deployed 2026-10-10 20:08 UTC — the live
+bundle names this server and no other STUN.
+
+Still the same box and the same operator as signaling and the TURN relay: the separation § 1 is
+about has not happened yet; only the process, its config and its logging are separate.
 
 **Corrected 2026-10-03.** This file used to say the config "has been loaded by a real coturn 4.6.1
 and checked end to end … refuses relay allocations". The refusal was never real: the config relied on
@@ -106,6 +108,8 @@ Then point hushsend at it — `VITE_STUN_URLS` in hushsend's `deploy/build-env.s
 redeploy the frontend (the value is compiled into the bundle).
 
 ## 6. laptop-server (the first deployment)
+
+**Done 2026-10-10** — every step below, in this order; the result is § 0.
 
 The TURN relay's `coturn.service` holds 3478 there, so this server takes **3479** (TLS 5350, which
 listens on nothing without a certificate). Manual steps, in order:
