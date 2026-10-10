@@ -18,7 +18,7 @@
 # --disable-stock-coturn  stop and disable the distro's coturn.service. Use it on
 #   a DEDICATED host: installing the package starts a default coturn there (on
 #   3478, logging). Never on a host where coturn.service is your TURN relay —
-#   laptop-server keeps it, and runs this server on 3479.
+#   laptop-server keeps it; this server takes 3479 there.
 # ============================================================================
 set -euo pipefail
 

@@ -93,7 +93,7 @@ config, and both the installer and CI check that coturn wrote no log file.
 | [`render.sh`](render.sh) | renders the template — and refuses a result without `stun-only` or `log-file=/dev/null`, or with credentials |
 | [`install.sh`](install.sh) | installs coturn if needed, renders `/etc/hushsend-stun/turnserver.conf`, installs and restarts `hushsend-stun.service`, checks it, rolls back on failure |
 | [`hushsend-stun.service`](hushsend-stun.service) | the systemd unit — its own, so it can run next to another coturn |
-| [`verify.sh`](verify.sh) | from another machine: STUN answers, the TCP port is open, an anonymous relay is refused |
+| [`verify.sh`](verify.sh) | from another machine: STUN answers over UDP, an anonymous relay is refused (plus the TCP port's state, as information) |
 | [`check.sh`](check.sh) | CI: the template on a real coturn, with a negative control |
 | [`lib.sh`](lib.sh) | the shared checks, including the hand-built TURN Allocate probe |
 | [`DEPLOY.md`](DEPLOY.md) | the runbook |

@@ -26,6 +26,8 @@ secret with it.
 - **No credentials** of any kind in the config (`render.sh` refuses them).
 - **No logs.** `log-file=/dev/null` + `no-stdout-log`; `check.sh` fails if coturn writes a log file
   or prints anything — an option coturn does not know is logged before `log-file` is read.
+- **No `no-cli` line.** coturn 4.6 keeps its CLI off without a cli-password; 4.18 has no CLI and
+  treats `no-cli` as unknown, which writes a log file (the template's last section says so).
 - **Never `turnserver -n` with a config file** — `-n` discards it.
 - The relay probe is the hand-built TURN Allocate in `lib.sh` (`stun_relay_probe`), not
   `turnutils_uclient`: against a server that ignores TURN the client waits forever.

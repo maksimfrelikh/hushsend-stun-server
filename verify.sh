@@ -7,7 +7,10 @@
 #
 # Checks:
 #   1. STUN answers over UDP and returns a mapped address.
-#   2. The TCP port accepts connections (networks that block UDP still need it).
+#   2. Whether the TCP port accepts connections — information only. A browser
+#      asks a `stun:` URL over UDP (WebRTC gathers its server-reflexive candidate
+#      over UDP), so hushsend needs UDP alone; on a network that blocks UDP the
+#      way out is TURN over TCP/TLS, which is the relay's job, not this server's.
 #      Reachability only — turnutils_stunclient has no TCP mode to speak STUN with.
 #   3. The server REFUSES to allocate a relay. This is the load-bearing one: a
 #      relay would put this operator on the media path, which is the position the
@@ -53,12 +56,11 @@ else
   fail=1
 fi
 
-# --- 2. TCP port reachable ----------------------------------------------------
+# --- 2. TCP port reachable (information only) ----------------------------------
 if stun_timeout 5 bash -c "exec 3<>/dev/tcp/${HOST}/${PORT}" 2>/dev/null; then
-  say "ok    TCP/$PORT accepts connections (clients on UDP-blocking networks can reach it)"
+  say "info  TCP/$PORT accepts connections — used only by non-browser STUN clients"
 else
-  say "warn  TCP/$PORT did not accept a connection — check the firewall allows ${PORT}/tcp"
-  say "      Not fatal: UDP is the normal path. It matters on networks that block UDP."
+  say "info  TCP/$PORT is closed — fine for hushsend: browsers ask STUN over UDP only"
 fi
 
 # --- 3. It must NOT relay ------------------------------------------------------
