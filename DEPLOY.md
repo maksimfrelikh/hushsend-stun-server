@@ -1,10 +1,11 @@
 # hushsend-stun-server — deployment runbook
 
-## 0. Status (2026-10-03)
+## 0. Status (2026-10-10)
 
 **Not running anywhere yet.** hushsend's clients still get STUN from the TURN relay's coturn
-(`stun:turn.hushsend.frelikh.dev:3478`, run by the signaling operator). The first deployment is
-prepared for laptop-server — § 6 — and waits for its three manual steps (DNS, router, ufw).
+(`stun:turn.hushsend.frelikh.dev:3478`, run by the signaling operator — the live bundle names it,
+checked 2026-10-10). The first deployment is prepared for laptop-server — § 6 — and waits for two
+manual steps, the router and ufw; the DNS name already resolves.
 
 **Corrected 2026-10-03.** This file used to say the config "has been loaded by a real coturn 4.6.1
 and checked end to end … refuses relay allocations". The refusal was never real: the config relied on
@@ -74,13 +75,18 @@ config, or stops the service on a first install.
 
 ## 4. Firewall and router
 
-`LISTEN_PORT` over UDP **and** TCP (some networks block UDP):
+`LISTEN_PORT` over **UDP**:
 
 ```bash
-sudo ufw allow 3478/udp && sudo ufw allow 3478/tcp     # your LISTEN_PORT
+sudo ufw allow 3478/udp     # your LISTEN_PORT
 ```
 
-Behind NAT, forward the same port (UDP + TCP) to the host. **No relay range** — there is no relay.
+Behind NAT, forward the same port (UDP) to the host. **No relay range** — there is no relay.
+
+TCP is not needed for hushsend: a browser asks a `stun:` URL over UDP only, and on a network that
+blocks UDP the way out is TURN over TCP/TLS — the relay's job, not this server's. coturn listens on
+TCP anyway; open the port only for a non-browser client that speaks STUN over TCP. `verify.sh`
+reports the TCP port as information, not as a failure.
 
 ## 5. Verify — the gate
 
@@ -101,9 +107,12 @@ redeploy the frontend (the value is compiled into the bundle).
 The TURN relay's `coturn.service` holds 3478 there, so this server takes **3479** (TLS 5350, which
 listens on nothing without a certificate). Manual steps, in order:
 
-1. DNS (Cloudflare, zone `frelikh.dev`): `A stun.hushsend` → `94.46.199.61`, **DNS only**.
-2. Router: forward **3479 UDP + TCP** → `192.168.1.19:3479`.
-3. ufw: `sudo ufw allow 3479/udp && sudo ufw allow 3479/tcp`.
+1. DNS: nothing to do. The `frelikh.dev` zone (Cloudflare) has a wildcard `*.frelikh.dev` →
+   `94.46.199.61`, DNS only, so `stun.hushsend.frelikh.dev` already resolves (checked 2026-10-10). An
+   explicit `A stun.hushsend` record is optional — if you add one, **DNS only**: a proxied record
+   overrides the wildcard, and the proxy does not carry UDP.
+2. Router: forward **3479 UDP** → `192.168.1.19:3479` (TCP is not needed — § 4).
+3. ufw: `sudo ufw allow 3479/udp`.
 4. Install:
    ```bash
    cd ~/projects/hushsend-stun-server && git pull --ff-only

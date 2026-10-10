@@ -92,3 +92,12 @@ total-quota=1
 realm=@REALM@
 # Do not advertise the version to the internet.
 no-software-attribute
+
+# --- Admin CLI: off, and deliberately NO `no-cli` line ------------------------
+# coturn 4.6 opens its telnet CLI only when a cli-password is set; there is none
+# here, so it stays off (measured on 4.6.1, 2026-10-10: nothing listens on the
+# CLI port 5766; coturn's "Empty cli-password … disabled" notice goes to the
+# /dev/null log). Newer coturn (4.18, Homebrew) has no CLI and no `no-cli`
+# option, and an option coturn does not know is logged BEFORE log-file is read —
+# it would create /var/tmp/turn_*.log. Adding the line buys nothing on 4.6 and
+# breaks "no logs" on 4.18.
