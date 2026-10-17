@@ -1,13 +1,15 @@
 # hushsend-stun-server — deployment runbook
 
-## 0. Status (2026-10-10)
+## 0. Status (2026-10-17)
 
-**Running on laptop-server, and hushsend's clients use it.** `hushsend-stun.service` runs there since
-2026-10-10 19:47 UTC on 3479 (§ 6 step 4: STUN answers, an anonymous relay is refused, no log file);
-ufw allows 3479/udp and the router forwards it. `verify.sh` passed from a mobile network the same
-evening: a public mapped address, the anonymous Allocate refused. hushsend switched with `bf15fd6`
-(`VITE_STUN_URLS=stun:stun.hushsend.frelikh.dev:3479`), deployed 2026-10-10 20:08 UTC — the live
-bundle names this server and no other STUN.
+**Running on netcup (the owner's VPS, `62.83.23.26`), and hushsend's clients use it.** Moved there from
+laptop-server on 2026-10-17 by the § 7 procedure: installed with
+`bash install.sh --realm stun.hushsend.frelikh.dev --port 3479 --tls-port 5350` (no `--external-ip`:
+the public address is on the interface), verified from outside first by address and then by name
+(`verify.sh stun.hushsend.frelikh.dev 3479`: a public mapped address, the anonymous Allocate refused),
+DNS switched to an explicit **A-only** record (coturn listens on IPv4 only, so no AAAA), and the
+laptop-server unit disabled the same day. No client rebuild was needed: same port, same name. The
+2026-10-10 laptop-server deployment (§ 6) is history.
 
 Still the same box and the same operator as signaling and the TURN relay: the separation § 1 is
 about has not happened yet; only the process, its config and its logging are separate.
@@ -107,9 +109,9 @@ by hand: `sudo find /var/log /var/tmp /tmp -maxdepth 4 -name 'turn_*.log' -mmin 
 Then point hushsend at it — `VITE_STUN_URLS` in hushsend's `deploy/build-env.sh`, rebuild and
 redeploy the frontend (the value is compiled into the bundle).
 
-## 6. laptop-server (the first deployment)
+## 6. laptop-server (the first deployment, 2026-10-10 … 2026-10-17 — history)
 
-**Done 2026-10-10** — every step below, in this order; the result is § 0.
+**Done 2026-10-10**, retired 2026-10-17 when the server moved to netcup (§ 0, § 7).
 
 The TURN relay's `coturn.service` holds 3478 there, so this server takes **3479** (TLS 5350, which
 listens on nothing without a certificate). Manual steps, in order:
