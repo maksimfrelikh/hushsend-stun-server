@@ -12,8 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      # Ubuntu's coturn is 4.6.1 — what laptop-server runs. The package starts its own coturn.service
+      - uses: actions/checkout@v7
+      # Ubuntu's coturn is 4.6.1 — what netcup runs. The package starts its own coturn.service
       # on 3478; check.sh uses 34790/34794 and never touches it.
       - name: Install coturn
         run: sudo apt-get update -qq && sudo apt-get install -y coturn
