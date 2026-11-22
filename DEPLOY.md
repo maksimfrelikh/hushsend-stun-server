@@ -11,9 +11,14 @@ laptop-server on 2026-10-17 by the § 7 procedure: installed with
 `bash install.sh --realm stun.hushsend.frelikh.dev --port 3479 --tls-port 5350` (no `--external-ip`:
 the public address is on the interface), verified from outside first by address and then by name
 (`verify.sh stun.hushsend.frelikh.dev 3479`: a public mapped address, the anonymous Allocate refused),
-DNS switched to an explicit **A-only** record (coturn listens on IPv4 only, so no AAAA), and the
+DNS switched to an explicit A-only record (coturn listened on IPv4 only then), and the
 laptop-server unit disabled the same day. No client rebuild was needed: same port, same name. The
 2026-10-10 laptop-server deployment (§ 6) is history.
+
+**IPv6 since 2026-11-22:** coturn listens on `::` as well as `0.0.0.0` and the name has an AAAA
+record. Checked on the host only — its global IPv6 address answers STUN and refuses the anonymous
+Allocate; `verify.sh` has NOT been run over IPv6 from another network yet (none with IPv6 was at
+hand). Over IPv4 `verify.sh stun.hushsend.frelikh.dev 3479` passed from outside after the change.
 
 Still the same box and the same operator as signaling and the TURN relay: the separation § 1 is
 about has not happened yet; only the process, its config and its logging are separate.
