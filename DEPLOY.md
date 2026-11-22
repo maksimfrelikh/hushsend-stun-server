@@ -68,17 +68,18 @@ sudo bash install.sh --realm stun.example.org [--port 3478] [--external-ip PUBLI
 ```
 
 The first run writes `/etc/hushsend-stun/stun.env` from the options; later runs re-render from it
-(`sudo bash install.sh`, or `--dry-run` to see the diff). Each run installs coturn if missing,
-renders `/etc/hushsend-stun/turnserver.conf`, installs `hushsend-stun.service` (its own unit, not the
-distro's `coturn.service`), restarts it and checks against 127.0.0.1: the port is bound, STUN answers,
-an anonymous relay allocation is refused, no log file appeared. A failure restores the previous
-config, or stops the service on a first install.
+(`sudo bash install.sh`, or `--dry-run` to see the diff). Each run renders
+`/etc/hushsend-stun/turnserver.conf`, (re)creates the container `hushsend-stun` from the image pinned
+in `lib.sh` (Docker required: host network, restarted by Docker, no log, read-only, user `nobody`)
+and checks against 127.0.0.1: the port is bound, STUN answers, an anonymous relay allocation is
+refused, no log file appeared. A failure restores the previous config and container, or removes the
+container on a first install.
 
-- **Dedicated host:** pass `--disable-stock-coturn`. Installing the package starts a default coturn on
-  3478 — relaying, logging — which also takes the port this server wants. The installer refuses to
+- **A host with the distro's coturn package:** its `coturn.service` runs a default coturn on 3478 —
+  relaying, logging — that holds the port; pass `--disable-stock-coturn`. The installer refuses to
   disable a `coturn.service` that is configured as a TURN relay.
-- **Next to a TURN relay** that already owns `coturn.service` and 3478: give this server another port
-  (laptop-server: 3479). The installer stops with an explanation if the port is taken.
+- **Next to a TURN relay** that holds 3478: give this server another port (netcup: 3479). The
+  installer stops with an explanation if the port is taken.
 
 ## 4. Firewall and router
 

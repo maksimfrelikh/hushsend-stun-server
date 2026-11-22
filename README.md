@@ -5,15 +5,15 @@ operated **apart from the signaling server**.
 
 There is no server code here, and there should not be: STUN is answered by `coturn`, which is mature
 and audited, and a hand-rolled replacement would be a liability rather than a feature. What this repo
-holds is everything else a host needs: the config template, an installer with its own systemd unit
-(so it runs alone on a small VM or next to a TURN relay that already owns `coturn.service`), a check
-that runs in CI against a real coturn, and `verify.sh` for checking a live server from outside.
+holds is everything else a host needs: the config template, an installer that runs coturn's official
+image as a container of its own (alone on a small VM, or next to a TURN relay on the same host), a
+check that runs in CI against that coturn, and `verify.sh` for checking a live server from outside.
 
-**Quick start on a new host** (Debian/Ubuntu, as root):
+**Quick start on a new host** (with Docker, as root):
 
 ```bash
 git clone https://github.com/maksimfrelikh/hushsend-stun-server.git && cd hushsend-stun-server
-sudo bash install.sh --realm stun.example.org --disable-stock-coturn   # add --external-ip PUBLIC/PRIVATE behind NAT
+sudo bash install.sh --realm stun.example.org   # add --external-ip PUBLIC/PRIVATE behind NAT
 bash verify.sh stun.example.org        # from ANOTHER machine
 ```
 
@@ -91,11 +91,10 @@ config, and both the installer and CI check that coturn wrote no log file.
 | [`turnserver.conf.template`](turnserver.conf.template) | the coturn config: `stun-only`, no credentials, no logs; per-host values as `@…@` |
 | [`stun.env.example`](stun.env.example) | the per-host values; on a host they live in `/etc/hushsend-stun/stun.env` |
 | [`render.sh`](render.sh) | renders the template — and refuses a result without `stun-only` or `log-file=/dev/null`, or with credentials |
-| [`install.sh`](install.sh) | installs coturn if needed, renders `/etc/hushsend-stun/turnserver.conf`, installs and restarts `hushsend-stun.service`, checks it, rolls back on failure |
-| [`hushsend-stun.service`](hushsend-stun.service) | the systemd unit — its own, so it can run next to another coturn |
+| [`install.sh`](install.sh) | renders `/etc/hushsend-stun/turnserver.conf`, (re)creates the `hushsend-stun` container from the pinned image, checks it, rolls back on failure |
 | [`verify.sh`](verify.sh) | from another machine: STUN answers over UDP, an anonymous relay is refused (plus the TCP port's state, as information) |
 | [`check.sh`](check.sh) | CI: the template on a real coturn, with a negative control |
-| [`lib.sh`](lib.sh) | the shared checks, including the hand-built TURN Allocate probe |
+| [`lib.sh`](lib.sh) | the shared checks, including the hand-built TURN Allocate probe, and `COTURN_IMAGE` — the coturn image, pinned by digest |
 | [`DEPLOY.md`](DEPLOY.md) | the runbook |
 
 ## Wiring it into hushsend

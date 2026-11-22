@@ -26,8 +26,8 @@ secret with it.
 - **No credentials** of any kind in the config (`render.sh` refuses them).
 - **No logs.** `log-file=/dev/null` + `no-stdout-log`; `check.sh` fails if coturn writes a log file
   or prints anything — an option coturn does not know is logged before `log-file` is read.
-- **No `no-cli` line.** coturn 4.6 keeps its CLI off without a cli-password; 4.18 has no CLI and
-  treats `no-cli` as unknown, which writes a log file (the template's last section says so).
+- **No `no-cli` line.** coturn 4.18+ starts its CLI only with `cli` and reports `no-cli` as an error
+  before `log-file` is read, which writes a log file (the template's last section says so).
 - **Never `turnserver -n` with a config file** — `-n` discards it.
 - The relay probe is the hand-built TURN Allocate in `lib.sh` (`stun_relay_probe`), not
   `turnutils_uclient`: against a server that ignores TURN the client waits forever.
@@ -35,7 +35,7 @@ secret with it.
 ## Testing
 
 `bash check.sh` needs `turnserver`, `turnutils_stunclient` and `python3`; no root. CI runs it on
-Ubuntu's coturn 4.6.1 (laptop-server's version). On the Mac (Homebrew coturn 4.18) the Bash sandbox
+the coturn image netcup runs (`COTURN_IMAGE` in `lib.sh`). On the Mac (Homebrew coturn 4.18) the Bash sandbox
 cannot bind ports — run it in a terminal tab with `PATH=/opt/homebrew/bin:$PATH`; it passed there on
 2026-10-03.
 

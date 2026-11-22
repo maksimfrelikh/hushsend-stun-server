@@ -2,16 +2,17 @@
 # hushsend-stun-server — coturn configuration: STUN ONLY, no relay, no logging
 # ============================================================================
 # TEMPLATE. install.sh renders it into /etc/hushsend-stun/turnserver.conf, the
-# file the hushsend-stun.service unit reads. Values written as @…@ come from
+# file the hushsend-stun container reads. Values written as @…@ come from
 # the host's /etc/hushsend-stun/stun.env. Do not edit the rendered file: change
 # this template (or stun.env) and run the installer again.
 #
 # Every choice below is deliberate; the comments say why, because the value of
 # this host is entirely in what it REFUSES to do.
 #
-# Checked in CI against coturn 4.6.1 (check.sh: it starts, answers STUN, refuses
-# a relay allocation, writes no log) and by install.sh on every host after it
-# restarts the service. Re-check from outside with verify.sh.
+# Checked in CI against the coturn image the host runs (COTURN_IMAGE in lib.sh;
+# check.sh: it starts, answers STUN, refuses a relay allocation, writes no log)
+# and by install.sh on every host after it (re)creates the container. Re-check
+# from outside with verify.sh.
 # ----------------------------------------------------------------------------
 
 # --- Listening ---------------------------------------------------------------
@@ -94,10 +95,7 @@ realm=@REALM@
 no-software-attribute
 
 # --- Admin CLI: off, and deliberately NO `no-cli` line ------------------------
-# coturn 4.6 opens its telnet CLI only when a cli-password is set; there is none
-# here, so it stays off (measured on 4.6.1, 2026-10-10: nothing listens on the
-# CLI port 5766; coturn's "Empty cli-password … disabled" notice goes to the
-# /dev/null log). Newer coturn (4.18, Homebrew) has no CLI and no `no-cli`
-# option, and an option coturn does not know is logged BEFORE log-file is read —
-# it would create /var/tmp/turn_*.log. Adding the line buys nothing on 4.6 and
-# breaks "no logs" on 4.18.
+# coturn 4.18+ starts its telnet CLI only with `cli` (4.6 only with a
+# cli-password: measured on 4.6.1, 2026-10-10, nothing listened on port 5766).
+# `no-cli` is reported as an error on 4.18+, BEFORE log-file is read — it would
+# create /var/tmp/turn_*.log. The line buys nothing and breaks "no logs".

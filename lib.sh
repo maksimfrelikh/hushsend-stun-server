@@ -1,8 +1,22 @@
 # shellcheck shell=bash
 # ============================================================================
 # Shared checks — sourced by install.sh (on the host), check.sh (CI) and
-# verify.sh (from another machine). Need coturn's client tools (turnutils_*).
+# verify.sh (from another machine). Need coturn's turnutils_stunclient, or
+# docker to run it from the image below.
 # ============================================================================
+
+# coturn itself: its official image, pinned by digest so a re-pushed tag cannot change what runs.
+# Ubuntu's coturn package (universe) gets no security fixes. To upgrade, change this line, then run
+# install.sh; CI tests exactly this image. (hush-signaling-server pins the same one for the relay.)
+COTURN_IMAGE=coturn/coturn:4.19.2-r0@sha256:ccdbc51e6f072130b0fc9eebda21f8d026d0a25581746c52557e887818011a3f
+
+# The STUN client: the host's own where installed (a dev box, CI's wrapper), else from the image.
+# `--init`: a tool running as PID 1 would ignore the SIGTERM that `timeout` sends.
+if command -v turnutils_stunclient >/dev/null 2>&1; then
+  STUN_CLIENT=(turnutils_stunclient)
+else
+  STUN_CLIENT=(docker run --rm --init --network host --entrypoint turnutils_stunclient "$COTURN_IMAGE")
+fi
 
 # `timeout` is coreutils; macOS lacks it. The perl fallback is the classic portable one: alarm()
 # survives exec, so the command itself is killed by SIGALRM when the time is up.
@@ -16,7 +30,7 @@ stun_udp_port_bound() { # port
 # STUN binding over UDP. Prints the mapped address; fails if none came back.
 stun_binding() { # host port
   local out addr
-  out=$(stun_timeout 15 turnutils_stunclient -p "$2" "$1" 2>&1 || true)
+  out=$(stun_timeout 15 "${STUN_CLIENT[@]}" -p "$2" "$1" 2>&1 || true)
   addr=$(printf '%s' "$out" | grep -oiE '(reflexive|mapped) addr: [0-9a-f.:]+' | head -1 | sed 's/.*: //')
   [ -n "$addr" ] || { printf '%s\n' "$out" | tail -5 >&2; return 1; }
   printf '%s\n' "$addr"

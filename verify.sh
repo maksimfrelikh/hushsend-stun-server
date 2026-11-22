@@ -37,9 +37,9 @@ if [[ -z "$HOST" ]]; then
   echo "usage: $0 <host> [port]" >&2
   exit 2
 fi
-for tool in turnutils_stunclient python3; do
+for tool in "${STUN_CLIENT[0]}" python3; do
   if ! command -v "$tool" >/dev/null 2>&1; then
-    echo "need $tool — coturn's client tools and python3:" >&2
+    echo "need $tool — coturn's client tools (or docker) and python3:" >&2
     echo "  sudo apt-get install -y coturn python3   |   brew install coturn" >&2
     exit 2
   fi

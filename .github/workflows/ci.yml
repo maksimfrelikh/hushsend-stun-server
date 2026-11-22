@@ -13,10 +13,19 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
-      # Ubuntu's coturn is 4.6.1 — what netcup runs. The package starts its own coturn.service
-      # on 3478; check.sh uses 34790/34794 and never touches it.
-      - name: Install coturn
-        run: sudo apt-get update -qq && sudo apt-get install -y coturn
+      # coturn as netcup runs it: the image pinned in lib.sh, behind wrappers named like its
+      # binaries, so check.sh runs it unchanged. /tmp and /var/tmp are shared: the config written
+      # there reaches coturn, and a log file it writes there is seen.
+      - name: coturn from the pinned image
+        run: |
+          image=$(sed -n 's/^COTURN_IMAGE=//p' lib.sh)
+          docker pull -q "$image"
+          for tool in turnserver turnutils_stunclient; do
+            printf '#!/bin/sh\nexec docker run --rm --init --network host --user %s -v /tmp:/tmp -v /var/tmp:/var/tmp --entrypoint %s %s "$@"\n' \
+              "$(id -u):$(id -g)" "$tool" "$image" | sudo tee "/usr/local/bin/$tool" >/dev/null
+            sudo chmod +x "/usr/local/bin/$tool"
+          done
+          turnserver --version
       - name: Shell scripts parse
         run: for f in *.sh; do bash -n "$f"; done
       - name: The template renders and coturn runs it as STUN-only (with a negative control)
