@@ -20,6 +20,7 @@
 # or the server reports the private address back to clients and every reflexive
 # candidate it hands out is useless.
 listening-ip=0.0.0.0
+listening-ip=::
 listening-port=@LISTEN_PORT@
 # PUBLIC or PUBLIC/PRIVATE. The installer comments this line out when
 # EXTERNAL_IP is empty (a host with its public address on an interface).

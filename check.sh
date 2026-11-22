@@ -57,6 +57,8 @@ echo "ok    coturn loaded the rendered config (listening on $PORT)"
 
 addr=$(stun_binding 127.0.0.1 "$PORT") || fail "STUN did not answer on $PORT"
 echo "ok    STUN answers (mapped address $addr)"
+addr=$(stun_binding ::1 "$PORT") || fail "STUN did not answer over IPv6 on $PORT"
+echo "ok    STUN answers over IPv6 (mapped address $addr)"
 
 verdict=$(stun_relay_probe 127.0.0.1 "$PORT")
 [ "$verdict" = refused ] || fail "relay probe: $verdict (expected: refused)"

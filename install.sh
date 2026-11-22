@@ -150,6 +150,8 @@ running || rollback "$CONTAINER is not running (it keeps no log: run the image i
 stun_udp_port_bound "$PORT" || rollback "nothing listens on UDP $PORT — the config was not loaded"
 addr=$(stun_binding 127.0.0.1 "$PORT") || rollback "STUN does not answer on 127.0.0.1:$PORT"
 say "ok    STUN answers on $PORT (mapped $addr)"
+addr=$(stun_binding ::1 "$PORT") || rollback "STUN does not answer on [::1]:$PORT"
+say "ok    STUN answers over IPv6 on $PORT (mapped $addr)"
 case "$(stun_relay_probe 127.0.0.1 "$PORT")" in
   refused) say "ok    an anonymous relay allocation is refused" ;;
   allocated) rollback "the server ALLOCATED A RELAY to an anonymous client — is stun-only in the config?" ;;
