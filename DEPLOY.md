@@ -1,8 +1,12 @@
 # hushsend-stun-server — deployment runbook
 
-## 0. Status (2026-10-17)
+## 0. Status (2026-11-22)
 
-**Running on netcup (the owner's VPS, `62.83.23.26`), and hushsend's clients use it.** Moved there from
+**Running on netcup (the owner's VPS, `62.83.23.26`) as the container `hushsend-stun`, and hushsend's
+clients use it.** Since 2026-11-22 it runs coturn's official image (`COTURN_IMAGE` in `lib.sh`)
+instead of `hushsend-stun.service` on Ubuntu's coturn 4.6.1, which gets no security fixes: `systemctl
+stop hushsend-stun` → `install.sh` → the unit removed, `apt-get purge coturn`; `verify.sh
+stun.hushsend.frelikh.dev 3479` passed from outside afterwards. Moved there from
 laptop-server on 2026-10-17 by the § 7 procedure: installed with
 `bash install.sh --realm stun.hushsend.frelikh.dev --port 3479 --tls-port 5350` (no `--external-ip`:
 the public address is on the interface), verified from outside first by address and then by name
